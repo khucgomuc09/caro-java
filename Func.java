@@ -10,12 +10,14 @@ public class Func {
 	Player playerY;
 	Player player;
 	boolean isPlayerX = true;
+	private Heuristic heu;
 
 	public void DrawChessboard() {
 		Scanner sc = new Scanner(System.in);
 		System.out.println("nhap kich thuoc cua ban co: ");
 		int size = sc.nextInt();
 		chessboard = new String[size + 1][size + 1];
+		heu = new Heuristic(chessboard);
 		for (int i = 0; i < chessboard.length; i++) {
 			for (int j = 0; j < chessboard.length; j++) {
 				if (i == 0 && j == 0) {
@@ -43,6 +45,16 @@ public class Func {
 			}
 		}
 	}
+
+//	public void copyChessboard(String[][] arr) {
+//		chessboard = new String[16][16];
+//		for (int i = 0; i < chessboard.length; i++) {
+//			for (int j = 0; j < chessboard.length; j++) {
+//				chessboard[i][j]=arr[i][j];
+//			}
+//			
+//		}
+//	}
 
 	public void initChessBoard() {
 
@@ -76,7 +88,76 @@ public class Func {
 			return false;
 	}
 
-	public void play() {
+	public void playWithPC() {
+		playerX = new Player();
+		playerX.setName("yourPC");
+		playerX.setValue(VALUE_X);
+		playerY = new Player();
+		playerY.setValue(VALUE_Y);
+		player = playerX;
+		System.out.println("nhap ten cua ban: ");
+		Scanner sc = new Scanner(System.in);
+		playerY.setName(sc.nextLine());
+//		String yourname=sc.nextLine();
+		boolean firstTime = true;
+		while (true) {
+			if (isPlayerX) {
+				player = playerX;
+			} else {
+				player = playerY;
+				System.out.println("luot choi cua " + player.getName() + " " + player.getValue());
+			}
+			if (!isPlayerX) {
+				try {
+					System.out.println("nhap x: ");
+					player.setX(Integer.parseInt(sc.nextLine()));
+					System.out.println("nhap y: ");
+					player.setY(Integer.parseInt(sc.nextLine()));
+					if (isValid()) {
+						chessboard[player.getX()][player.getY()] = player.getValue();
+					}
+					initChessBoard();
+					if (checkWin(player)) {
+						System.out.println("Player " + player.getName() + " win");
+						sc.close();
+						break;
+					}
+				} catch (Exception e) {
+					System.out.println(e);
+					System.out.println("---> input must is number and not out of zise chessboard <---");
+				}
+			} else {
+				int x = 0;
+				int y = 0;
+				if (firstTime) {
+					x = y = chessboard.length / 2 - 1;
+//					y = x;
+					firstTime = false;
+				} else {
+					PC field = heu.getMaxNode(chessboard);
+					x = field.getX();
+					y = field.getY();
+				}
+				player.setX(x);
+				player.setY(y);
+				if (isValid()) {
+					chessboard[player.getX()][player.getY()] = player.getValue();
+					initChessBoard();
+					System.out.println(
+							"==>> " + player.name + " vua danh vao vi tri [" + player.x + "][" + player.y + "]");
+				}
+				if (checkWin(player)) {
+					System.out.println("Player " + player.getName() + " win");
+					sc.close();
+					break;
+				}
+
+			}
+
+		}
+	}
+
+	public void playWithHuman() {
 		initPlayer();
 		Scanner sc = new Scanner(System.in);
 		while (true) {
@@ -116,9 +197,21 @@ public class Func {
 		for (int i = 1; i < chessboard.length; i++) {
 
 			boolean checkrow = chessboard[X][i].equals(player.getValue());// hang
-			boolean checkcol = chessboard[i][Y].equals(player.getValue());// cot
 
-			if (checkrow || checkcol) {
+			if (checkrow) {
+				count++;
+				if (count > 4) {
+					checkwin = true;
+					break;
+				}
+			} else {
+				count = 0;
+			}
+		}
+
+		for (int i = 1; i < chessboard.length; i++) {
+			boolean checkcol = chessboard[i][Y].equals(player.getValue());// cot
+			if (checkcol) {
 				count++;
 				if (count > 4) {
 					checkwin = true;
@@ -146,7 +239,14 @@ public class Func {
 			} else
 				break;
 		}
-
+		count = count1 + count2;
+		if (count >= 4) {
+			checkwin = true;
+		} else {
+			count1 = 0;
+			count2 = 0;
+			count = 0;
+		}
 		// duong cheo phu
 		for (int i = 1; i <= player.getX(); i++) {
 			if (X + i >= chessboard.length || Y - i <= 0)
@@ -167,15 +267,27 @@ public class Func {
 		count = count1 + count2;
 		if (count >= 4) {
 			checkwin = true;
-		} else
+		} else {
+
 			count = 0;
+		}
 		return checkwin;
 	}
 
 	public static void main(String[] args) {
+		System.out.println("type of play:\n1. Play with friend\n2. play with pc");
 		Func f = new Func();
-		f.DrawChessboard();
-		f.initChessBoard();
-		f.play();
+		Scanner sc = new Scanner(System.in);
+		int typeOfPlay = sc.nextInt();
+		if (typeOfPlay == 1) {
+			f.DrawChessboard();
+			f.initChessBoard();
+			f.playWithHuman();
+		} else if (typeOfPlay == 2) {
+			f.DrawChessboard();
+			f.initChessBoard();
+			f.playWithPC();
+		}
+
 	}
 }
