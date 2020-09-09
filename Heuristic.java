@@ -1,5 +1,8 @@
 package game_caro;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Heuristic {
 	long[] attackArray = new long[] { 0, 8, 56, 392, 2477, 19208, 118008 };
 	long[] defenseArray = new long[] { 0, 4, 32, 325, 2048, 16384, 59049 };
@@ -16,19 +19,21 @@ public class Heuristic {
 	}
 
 	public PC getMaxNode(String[][] Board) {
-		long maxScores = minimax(3, Board, true);
+		long maxScores = minimax(1, Board,-9999,9999999, true);
+//		long maxScores = 0;
 		for (int i = 1; i < Board.length; i++) {
 			for (int j = 1; j < Board.length; j++) {
 				if (Board[i][j] == "[ ]") {
 					long score = sumAttackScore(i, j) > sumDefendScore(i, j) ? sumAttackScore(i, j)
 							: sumDefendScore(i, j);
 					if (score == maxScores) {
-					pc = new PC(i, j, maxScores);
-					System.out.println(
-							"x " + pc.getX() + " y " + pc.getY() + " sc " + pc.getScores() + " max " + maxScores);
+						maxScores = score;
+						pc = new PC(i, j, maxScores);
+						System.out.println(
+								"x " + pc.getX() + " y " + pc.getY() + " sc " + pc.getScores() + " max " + maxScores);
+					}
 				}
 			}
-		}
 		}
 		return pc;
 	}
@@ -42,7 +47,6 @@ public class Heuristic {
 							: sumDefendScore(i, j);
 					if (score >= heuScores) {
 						heuScores = score;
-//						pc = new PC(i, j, heuScores);
 					}
 				}
 			}
@@ -50,12 +54,12 @@ public class Heuristic {
 		return heuScores;
 	}
 
-	private long minimax(int depth, String[][] board, boolean minmax) {
+	private long minimax(int depth, String[][] board, long alpha, long beta, boolean minmax) {
 		long minScores = 0;
 		if (depth == 0)
 			return getHeuristic(board);
 		if (minmax == true) {
-			long temp = -9999;
+			long temp = alpha = -9999;
 			for (int i = 1; i < board.length; i++) {
 				for (int j = 1; j < board.length; j++) {
 					if (board[i][j] == "[ ]") {
@@ -66,10 +70,13 @@ public class Heuristic {
 							}
 						}
 						newChessBoard[i][j] = VALUE_X;
-						long value = minimax(depth - 1, newChessBoard, false);
+						long value = minimax(depth - 1, board, alpha, beta, false);
 						if (temp < value) {
-							
 							temp = value;
+						}
+						alpha=temp;
+						if (alpha>=beta) { 
+							break;
 						}
 						minScores = temp;
 					}
@@ -77,7 +84,7 @@ public class Heuristic {
 			}
 		}
 		if (minmax == false) {
-			long temp = 9999999;
+			long temp = beta= 9999999;
 			for (int i = 1; i < board.length; i++) {
 				for (int j = 1; j < board.length; j++) {
 					if (board[i][j] == "[ ]") {
@@ -88,10 +95,13 @@ public class Heuristic {
 							}
 						}
 						newChessBoard[i][j] = VALUE_Y;
-						long value = minimax(depth - 1, newChessBoard, true);
+						long value = minimax(depth - 1, board,alpha,beta, true);
 						if (temp > value) {
-							
 							temp = value;
+						}
+						beta=temp;
+						if (beta<=alpha) {
+							break;
 						}
 						minScores = temp;
 					}
